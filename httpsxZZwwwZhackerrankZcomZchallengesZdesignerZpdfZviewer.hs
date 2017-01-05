@@ -1,5 +1,5 @@
 module Main where -- module httpsxZZwwwZhackerrankZcomZchallengesZdesignerZpdfZviewer where
---https://www.hackerrank.com/challenges/designer-pdf-viewer?h_r=next-challenge&h_v=zen
+--https://www.hackerrank.com/challenges/designer-pdf-viewer?h_r=next-challenge
 import Control.Applicative
 import Control.Monad
 import System.IO
