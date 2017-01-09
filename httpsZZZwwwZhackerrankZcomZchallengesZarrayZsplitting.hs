@@ -1,10 +1,19 @@
-{-# LANGUAGE EmptyDataDecls,BangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 module Main where -- httpsZZZwwwZhackerrankZcomZchallengesZarrayZsplitting.hs
 import Prelude hiding (partition, (!))
 import Data.Maybe
 import Control.Monad
+import Control.Applicative ((<$>))
 import Data.Vector.Unboxed ((!))
 import qualified Data.Vector.Unboxed as Data.Vector.Unboxed
+
+data Search a = Search {
+  s_idx :: Int ,
+  s_sum :: Int ,
+  s_vec :: Data.Vector.Unboxed.Vector a
+  } deriving Show
+
+search i j = (Search i 0 Data.Vector.Unboxed.empty, Search j 0 Data.Vector.Unboxed.empty)
 
 array,array2,array3,array4 :: Data.Vector.Unboxed.Vector Int
 array        = Data.Vector.Unboxed.fromList [2, 2, 2, 2]
@@ -13,7 +22,8 @@ array3       = Data.Vector.Unboxed.fromList [4, 1, 0, 1, 1, 0, 1]
 array4       = Data.Vector.Unboxed.fromList [3,3,3]
 
 partition xs
-  | Data.Vector.Unboxed.length xs == 1 = Nothing
+  | Data.Vector.Unboxed.length xs == 1 ||
+    Data.Vector.Unboxed.length xs == 0 = Nothing
   | Data.Vector.Unboxed.length xs == 2 = 
     let 
       x = xs ! 0
@@ -21,21 +31,20 @@ partition xs
     in case x == y of
       True  ->  Just (Data.Vector.Unboxed.singleton x, Data.Vector.Unboxed.singleton y)
       False ->  Nothing
-  | otherwise                          = go 
-                                         (0                               , Data.Vector.Unboxed.empty) 
-                                         (Data.Vector.Unboxed.length xs -1, Data.Vector.Unboxed.empty)
-  where go (!i, !ys) (!j, !zs)
+  | otherwise                          = let (left, right) = search 0 (Data.Vector.Unboxed.length xs -1)
+                                         in go left right
+  where go left@(Search i lweight ys) right@(Search j rweight zs)
           | i > j                = 
             case rweight == lweight of
             True  -> Just (ys, zs)
             False -> Nothing
           | rweight' == lweight' = 
             case (compare y z) of 
-              GT ->                go (i       , ys)  (j + joff, zs')
-              EQ ->                go (i       , ys)  (j + joff, zs')
-              LT ->                go (i + ioff, ys') (j       , zs)
-          | lweight' > rweight'  = go (i       , ys)  (j + joff, zs')
-          | rweight' > lweight'  = go (i + ioff, ys') (j       , zs)
+              GT ->                go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
+              EQ ->                go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
+              LT ->                go left { s_idx = i + ioff, s_sum = lweight + y, s_vec = ys'}  right
+          | lweight' > rweight'  = go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
+          | rweight' > lweight'  = go left { s_idx = i + ioff, s_sum = lweight + y,  s_vec = ys'} right
           where
             y       = xs ! i
             z       = xs ! j
@@ -47,8 +56,8 @@ partition xs
             joff
               | rweight' > lweight' = 0
               | otherwise           = -1
-            (lweight,lweight') = (Data.Vector.Unboxed.sum ys, Data.Vector.Unboxed.sum ys')
-            (rweight,rweight') = (Data.Vector.Unboxed.sum zs, Data.Vector.Unboxed.sum zs')
+            lweight' = lweight + y 
+            rweight' = rweight + z
 
 score = go 0
   where 
