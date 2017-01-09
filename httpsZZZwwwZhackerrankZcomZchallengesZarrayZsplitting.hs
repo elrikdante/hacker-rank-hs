@@ -8,12 +8,13 @@ import Data.Vector.Unboxed ((!))
 import qualified Data.Vector.Unboxed as Data.Vector.Unboxed
 
 data Search a = Search {
-  s_idx :: Int ,
-  s_sum :: Int ,
-  s_vec :: Data.Vector.Unboxed.Vector a
+  s_idx :: !Int ,
+  s_sum :: !Int ,
+  s_vec :: !(Data.Vector.Unboxed.Vector a)
   } deriving Show
 
-search i j = (Search i 0 Data.Vector.Unboxed.empty, Search j 0 Data.Vector.Unboxed.empty)
+search i j = (Search i 0 Data.Vector.Unboxed.empty, 
+              Search j 0 Data.Vector.Unboxed.empty)
 
 array,array2,array3,array4 :: Data.Vector.Unboxed.Vector Int
 array        = Data.Vector.Unboxed.fromList [2, 2, 2, 2]
@@ -29,7 +30,8 @@ partition xs
       x = xs ! 0
       y = xs ! 1
     in case x == y of
-      True  ->  Just (Data.Vector.Unboxed.singleton x, Data.Vector.Unboxed.singleton y)
+      True  ->  Just (Data.Vector.Unboxed.singleton x, 
+                      Data.Vector.Unboxed.singleton y)
       False ->  Nothing
   | otherwise                          = let (left, right) = search 0 (Data.Vector.Unboxed.length xs -1)
                                          in go left right
@@ -40,12 +42,14 @@ partition xs
             False -> Nothing
           | rweight' == lweight' = 
             case (compare y z) of 
-              GT ->                go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
-              EQ ->                go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
-              LT ->                go left { s_idx = i + ioff, s_sum = lweight + y, s_vec = ys'}  right
-          | lweight' > rweight'  = go left                                                        right { s_idx = j + joff, s_sum = rweight + z, s_vec = zs'}
-          | rweight' > lweight'  = go left { s_idx = i + ioff, s_sum = lweight + y,  s_vec = ys'} right
+              GT ->                go left  right'
+              EQ ->                go left  right'
+              LT ->                go left' right
+          | lweight' > rweight'  = go left  right'
+          | rweight' > lweight'  = go left' right
           where
+            right'  = right { s_idx = j + joff, s_sum = rweight',  s_vec = zs'}
+            left'   = left  { s_idx = i + ioff, s_sum = lweight',  s_vec = ys'}
             y       = xs ! i
             z       = xs ! j
             ys'     = Data.Vector.Unboxed.snoc ys y
