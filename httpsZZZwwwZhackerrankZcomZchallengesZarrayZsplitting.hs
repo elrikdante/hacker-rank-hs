@@ -20,7 +20,8 @@ array        = Data.Vector.Unboxed.fromList [2, 2, 2, 2]
 array2       = Data.Vector.Unboxed.fromList [1,0, 0, 1]
 array3       = Data.Vector.Unboxed.fromList [4, 1, 0, 1, 1, 0, 1]
 array4       = Data.Vector.Unboxed.fromList [3,3,3]
-test         = score <$> [array, array2, array3, array4]
+array5       = Data.Vector.Unboxed.fromList (take 55 $ repeat 0 :: [Int])
+test         = score <$> [array, array2, array3, array4,array5]
 partition xs
   | Data.Vector.Unboxed.length xs <  2 = Nothing
   | Data.Vector.Unboxed.length xs == 2 = 
@@ -31,6 +32,7 @@ partition xs
       True  ->  Just (Data.Vector.Unboxed.singleton x, 
                       Data.Vector.Unboxed.singleton y)
       False ->  Nothing
+  | Data.Vector.Unboxed.sum xs == 0    = Just (Data.Vector.Unboxed.splitAt 1 xs)
   | otherwise                          = let (left, right) = search 0 (Data.Vector.Unboxed.length xs -1)
                                          in go left right
   where go left@(Search i lweight) right@(Search j rweight)
